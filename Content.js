@@ -55,231 +55,151 @@ let activeImage = null;
 let activeBubble = null;
 
 
-
 /* ---------------------------------------------------
-   Weather modes
+   Weather & Image Setup
 --------------------------------------------------- */
-const weatherMode = {
-  0: "blank",
-  1: "waterdrop",
-  2: "waterdrop",
-  3: "waterdrop",
-  4: "waterdrop",
-  5: "waterdrop",
-  6: "blank",
-  7: "blank",
-  8: "blank",
-  9: "lightning",
-  10: "lightning",
-  11: "lightning",
-  12: "lightning",
-  13: "lightning",
-  14: "lightning",
-  15: "lightning",
-  16: "lightning",
-  17: "lightning",
-  18: "lightning",
-  19: "lightning",
-  20: "lightning"
+const weatherMode = Array(21).fill("blank"); // default to blank
+for (let i = 1; i <= 6; i++) weatherMode[i] = "waterdrop"; // waterdrop 1-6
+for (let i = 9; i <= 20; i++) weatherMode[i] = "lightning"; // lightning 9-20
+
+const weatherImages = {
+  waterdrop: [
+    { start: 1, end: 3, file: "waterdrops.png" },
+    { start: 4, end: 6, file: "waterdrops2.png" },
+    { start: 7, end: 7, file: "waterdrops3.png" }
+  ],
+  lightning: [
+    { start: 10, end: 15, file: "lightning_banner.png" },
+    { start: 16, end: 20, file: "lightning_banner_2.png" }
+  ]
 };
 
 
 
-/* ---------------------------------------------------
-   Weather image assignment by index  >> so each set of clouds has its own banner
---------------------------------------------------- */
-const waterdropImages = [
-  { range: [1, 3], file: "waterdrops.png" },
-  { range: [4, 6], file: "waterdrops2.png" },
-  { range: [7, 7], file: "waterdrops3.png" }
-];
-
-const lightningBannerImages = [
-  { range: [10, 11], file: "lightning_banner.png" },
-  { range: [12, 15], file: "lightning_banner.png" },
-  { range: [16, 20], file: "lightning_banner_2.png" }
-];
-
 function getWeatherImage(index, type) {
-  const map = type === "waterdrop" ? waterdropImages : lightningBannerImages;
-  const found = map.find(entry => index >= entry.range[0] && index <= entry.range[1]);
-  return found ? found.file : (type === "waterdrop" ? "waterdrops.png" : "lightning_banner.png");
+  const entry = weatherImages[type]?.find(e => index >= e.start && index <= e.end);
+  return entry ? entry.file : type === "waterdrop" ? "waterdrops.png" : "lightning_banner.png";
 }
 
-
-
 /* ---------------------------------------------------
-   Show cloud guy
+   Cloud Guy (EMS) & Bubble
 --------------------------------------------------- */
 function showEMS(filename) {
   if (!activeImage) {
     activeImage = document.createElement("img");
     Object.assign(activeImage.style, {
-      position: "fixed",
-      right: "20px",
-      top: "20px",
-      width: "100px",
-      pointerEvents: "none",
-      opacity: "0",
-      transition: "opacity .5s",
+      position: "fixed", right: "20px", top: "20px",
+      width: "100px", pointerEvents: "none",
+      opacity: "0", transition: "opacity .5s",
       zIndex: "9999"
     });
     document.body.appendChild(activeImage);
   }
-
   activeImage.src = chrome.runtime.getURL(filename);
   requestAnimationFrame(() => activeImage.style.opacity = "1");
 }
 
-
-
-/* ---------------------------------------------------
-   Speech bubbles
---------------------------------------------------- */
 function showBubble(index) {
-  if (index < 1) return;    
-
+  if (index < 1) return;
   const file = tbImages[index - 1];
   if (!file) return;
 
-  if (activeBubble) activeBubble.remove();
+  activeBubble?.remove();
 
   const bubble = document.createElement("img");
   bubble.src = chrome.runtime.getURL(file);
-
   Object.assign(bubble.style, {
-    position: "fixed",
-    right: "130px",
-    top: "60px",
-    width: "200px",
-    opacity: "0",
-    transition: "opacity .4s",
-    pointerEvents: "none",
-    zIndex: "10000"
+    position: "fixed", right: "130px", top: "60px",
+    width: "200px", opacity: "0", transition: "opacity .4s",
+    pointerEvents: "none", zIndex: "10000"
   });
 
   document.body.appendChild(bubble);
   requestAnimationFrame(() => bubble.style.opacity = "1");
-
   activeBubble = bubble;
 
-  setTimeout(() => {
-    bubble.style.opacity = "0";
-    setTimeout(() => bubble.remove(), 500);
+  setTimeout(() => { 
+    bubble.style.opacity = "0"; 
+    setTimeout(() => bubble.remove(), 500); 
   }, 4000);
 }
 
 
 
 /* ---------------------------------------------------
-   Weather containers
+   Weather display
 --------------------------------------------------- */
 let activeWeather = null;
 
-
-
-/* ---------------------------------------------------
-   Keyframes
---------------------------------------------------- */
-const style = document.createElement("style");
-style.textContent = `
-@keyframes rainScroll {
-  from { background-position-y: 0; }
-  to   { background-position-y: 100%; }
-}
-@keyframes lightningFlash {
-  0%, 100% { opacity: 0; }
-  20% { opacity: var(--flash1, 0.8); }
-  40% { opacity: var(--flash2, 0.4); }
-  60% { opacity: var(--flash3, 1); }
-  80% { opacity: var(--flash4, 0.3); }
-}
-`;
-document.head.appendChild(style);
-
-
-
-/* ---------------------------------------------------
-   Weather display
---------------------------------------------------- */
-function showWeather(mode, clickY = null, clickX = null) {
-  if (activeWeather) activeWeather.remove();
-  if (mode === "blank") return;
-
+function createWeatherDiv(backgroundFile, width, top, left, animation) {
   const div = document.createElement("div");
-
   Object.assign(div.style, {
     position: "fixed",
+    top: top + "px",
+    left: left + "px",
+    width: width + "px",
+    height: "100vh",
+    backgroundImage: `url(${chrome.runtime.getURL(backgroundFile)})`,
+    backgroundRepeat: "repeat",
+    backgroundSize: width + "px auto",
+    animation: animation,
     pointerEvents: "none",
     opacity: "0",
     transition: "opacity .4s",
     zIndex: "9998"
   });
+  return div;
+}
 
-  if (mode === "waterdrop") {
-    const cloudWidth = activeImage ? activeImage.offsetWidth : 120;
-    const cloudLeft = window.innerWidth - 20 - cloudWidth;
-    const verticalOffset = 80;
+function createLightningFlash(clickX, clickY) {
+  const flash = document.createElement("div");
 
-    Object.assign(div.style, {
-      top: verticalOffset + "px",
-      left: cloudLeft + "px",
-      width: cloudWidth + "px",
-      height: "100vh",
-      backgroundImage: `url(${chrome.runtime.getURL(getWeatherImage(currentImageIndex, "waterdrop"))})`,
-      backgroundRepeat: "repeat",
-      backgroundSize: cloudWidth + "px auto",
-      animation: "rainScroll 5s linear infinite"
-    });
+  ["--flash1","--flash2","--flash3","--flash4"].forEach(f => 
+    flash.style.setProperty(f, Math.random())
+  );
+
+  Object.assign(flash.style, {
+    position: "fixed",
+    top: clickY + "px",
+    left: clickX + "px",
+    width: "80px",
+    height: "120px",
+    backgroundImage: `url(${chrome.runtime.getURL("lightning.png")})`,
+    backgroundRepeat: "no-repeat",
+    backgroundSize: "contain",
+    animation: "lightningFlash 1s ease-in-out infinite",
+    pointerEvents: "none",
+    opacity: "0",
+    transition: "opacity .2s",
+    zIndex: "10001"
+  });
+
+  document.body.appendChild(flash);
+  requestAnimationFrame(() => flash.style.opacity = "1");
+
+  setTimeout(() => {
+    flash.style.opacity = "0";
+    setTimeout(() => flash.remove(), 400);
+  }, 1200);
+}
+
+function showWeather(mode, clickY = null, clickX = null) {
+  // Remove old weather
+  if (activeWeather) activeWeather.remove();
+  if (mode === "blank") return;
+
+  const cloudWidth = activeImage?.offsetWidth || 120;
+  const cloudLeft = window.innerWidth - 20 - cloudWidth;
+  const verticalOffset = 80;
+
+  // Lightning flash effect
+  if (mode === "lightning" && clickX !== null && clickY !== null) {
+    createLightningFlash(clickX, clickY);
   }
 
-  if (mode === "lightning") {
-    const flash = document.createElement("div");
-
-    flash.style.setProperty("--flash1", Math.random());
-    flash.style.setProperty("--flash2", Math.random());
-    flash.style.setProperty("--flash3", Math.random());
-    flash.style.setProperty("--flash4", Math.random());
-
-    Object.assign(flash.style, {
-      position: "fixed",
-      top: clickY + "px",
-      left: clickX + "px",
-      width: "80px",
-      height: "120px",
-      backgroundImage: `url(${chrome.runtime.getURL("lightning.png")})`,
-      backgroundRepeat: "no-repeat",
-      backgroundSize: "contain",
-      animation: "lightningFlash 1s ease-in-out infinite",
-      pointerEvents: "none",
-      opacity: "0",
-      zIndex: "10001",
-      transition: "opacity .2s"
-    });
-
-    document.body.appendChild(flash);
-    requestAnimationFrame(() => flash.style.opacity = "1");
-
-    setTimeout(() => {
-      flash.style.opacity = "0";
-      setTimeout(() => flash.remove(), 400);
-    }, 1200);
-
-    const cloudWidth = activeImage ? activeImage.offsetWidth : 120;
-    const cloudLeft = window.innerWidth - 20 - cloudWidth;
-    const verticalOffset = 80;
-
-    Object.assign(div.style, {
-      top: verticalOffset + "px",
-      left: cloudLeft + "px",
-      width: cloudWidth + "px",
-      height: "100vh",
-      backgroundImage: `url(${chrome.runtime.getURL(getWeatherImage(currentImageIndex, "lightning"))})`,
-      backgroundRepeat: "repeat",
-      backgroundSize: cloudWidth + "px auto",
-      animation: "rainScroll 5s linear infinite"
-    });
-  }
+  // Cloud overlay for both waterdrop and lightning
+  const weatherFile = getWeatherImage(currentImageIndex, mode);
+  const div = createWeatherDiv(weatherFile, cloudWidth, verticalOffset, cloudLeft, "rainScroll 5s linear infinite");
 
   document.body.appendChild(div);
   requestAnimationFrame(() => div.style.opacity = "1");
@@ -291,7 +211,6 @@ function showWeather(mode, clickY = null, clickX = null) {
     setTimeout(() => div.remove(), 400);
   }, 5000);
 }
-
 
 
 /* ---------------------------------------------------
