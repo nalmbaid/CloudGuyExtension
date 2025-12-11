@@ -33,7 +33,7 @@ function isShoppingSite() {
    Cloud images + speech bubbles
 --------------------------------------------------- */
 const baseImages = [
-  "e0.png",  /* ###changed here — added explicit e0 start */
+  "e0.png",
   "e1.png", "e2.png", "e3.png", "e4.png", "e5.png",
   "e6.png", "e7.png", "e8.png", "e9.png", "e10.png",
   "e11.png", "e12.png", "e13.png", "e14.png", "e15.png",
@@ -46,7 +46,6 @@ const tbImages = [
   "ems9_b.png", "ems10_b.png", "ems11_b.png", "ems12_b.png",
   "ems13_b.png", "ems14_b.png", "ems15_b.png", "ems16_b.png",
   "ems17_b.png", "ems18_b.png", "ems19_b.png", "ems20_b.png"
-  /* ems21 unused */
 ];
 
 let currentImageIndex = 0;
@@ -85,6 +84,29 @@ const weatherMode = {
 
 
 /* ---------------------------------------------------
+   Weather image assignment by index (range-based)
+--------------------------------------------------- */
+const waterdropImages = [
+  { range: [1, 3], file: "waterdrops.png" },
+  { range: [4, 6], file: "waterdrops2.png" },
+  { range: [7, 7], file: "waterdrops3.png" }
+];
+
+const lightningBannerImages = [
+  { range: [10, 11], file: "lightning_banner.png" },
+  { range: [12, 15], file: "lightning_banner2.png" },
+  { range: [16, 20], file: "lightning_banner3.png" }
+];
+
+function getWeatherImage(index, type) {
+  const map = type === "waterdrop" ? waterdropImages : lightningBannerImages;
+  const found = map.find(entry => index >= entry.range[0] && index <= entry.range[1]);
+  return found ? found.file : (type === "waterdrop" ? "waterdrops.png" : "lightning_banner.png");
+}
+
+
+
+/* ---------------------------------------------------
    Show cloud guy
 --------------------------------------------------- */
 function showEMS(filename) {
@@ -113,7 +135,6 @@ function showEMS(filename) {
    Speech bubbles
 --------------------------------------------------- */
 function showBubble(index) {
-
   if (index < 1) return;    
 
   const file = tbImages[index - 1];
@@ -160,14 +181,10 @@ let activeWeather = null;
 --------------------------------------------------- */
 const style = document.createElement("style");
 style.textContent = `
-
-/* Waterdrop now scrolls downward */
 @keyframes rainScroll {
   from { background-position-y: 0; }
   to   { background-position-y: 100%; }
 }
-
-/* Lightning flash with randomized intensity ###changed here */
 @keyframes lightningFlash {
   0%, 100% { opacity: 0; }
   20% { opacity: var(--flash1, 0.8); }
@@ -197,94 +214,71 @@ function showWeather(mode, clickY = null, clickX = null) {
     zIndex: "9998"
   });
 
-
-  /* ----------------------------------------------
-   WATERDROP — centered under cloud guy ###changed here
----------------------------------------------- */
-
   if (mode === "waterdrop") {
     const cloudWidth = activeImage ? activeImage.offsetWidth : 120;
-
-    // Cloud's left edge ###changed here
     const cloudLeft = window.innerWidth - 20 - cloudWidth;
-
-    // Offset downward from cloud top ###changed here
-    const verticalOffset = 80;  // adjust this value to change how low it starts
+    const verticalOffset = 80;
 
     Object.assign(div.style, {
-      top: verticalOffset + "px",  /* starts slightly lower than cloud */
-      left: cloudLeft + "px",      /* aligned with cloud’s left edge */
+      top: verticalOffset + "px",
+      left: cloudLeft + "px",
       width: cloudWidth + "px",
       height: "100vh",
-      backgroundImage: `url(${chrome.runtime.getURL("waterdrops.png")})`,
+      backgroundImage: `url(${chrome.runtime.getURL(getWeatherImage(currentImageIndex, "waterdrop"))})`,
       backgroundRepeat: "repeat",
       backgroundSize: cloudWidth + "px auto",
       animation: "rainScroll 5s linear infinite"
     });
   }
 
-
-  /* ----------------------------------------------
-     LIGHTNING — randomized flash ###changed here
-  ---------------------------------------------- */
-  /* ----------------------------------------------
-   LIGHTNING — TWO BEHAVIORS
----------------------------------------------- */
   if (mode === "lightning") {
+    const flash = document.createElement("div");
 
-  /* 1) Lightning FLASH */
-  const flash = document.createElement("div");
+    flash.style.setProperty("--flash1", Math.random());
+    flash.style.setProperty("--flash2", Math.random());
+    flash.style.setProperty("--flash3", Math.random());
+    flash.style.setProperty("--flash4", Math.random());
 
-  flash.style.setProperty("--flash1", Math.random());
-  flash.style.setProperty("--flash2", Math.random());
-  flash.style.setProperty("--flash3", Math.random());
-  flash.style.setProperty("--flash4", Math.random());
+    Object.assign(flash.style, {
+      position: "fixed",
+      top: clickY + "px",
+      left: clickX + "px",
+      width: "80px",
+      height: "120px",
+      backgroundImage: `url(${chrome.runtime.getURL("lightning.png")})`,
+      backgroundRepeat: "no-repeat",
+      backgroundSize: "contain",
+      animation: "lightningFlash 1s ease-in-out infinite",
+      pointerEvents: "none",
+      opacity: "0",
+      zIndex: "10001",
+      transition: "opacity .2s"
+    });
 
-  Object.assign(flash.style, {
-    position: "fixed",
-    top: clickY + "px",
-    left: clickX + "px",
-    width: "80px",
-    height: "120px",
-    backgroundImage: `url(${chrome.runtime.getURL("lightning.png")})`,
-    backgroundRepeat: "no-repeat",
-    backgroundSize: "contain",
-    animation: "lightningFlash 1s ease-in-out infinite",
-    pointerEvents: "none",
-    opacity: "0",
-    zIndex: "10001",
-    transition: "opacity .2s"
-  });
+    document.body.appendChild(flash);
+    requestAnimationFrame(() => flash.style.opacity = "1");
 
-  document.body.appendChild(flash);
-  requestAnimationFrame(() => flash.style.opacity = "1");
+    setTimeout(() => {
+      flash.style.opacity = "0";
+      setTimeout(() => flash.remove(), 400);
+    }, 1200);
 
-  setTimeout(() => {
-    flash.style.opacity = "0";
-    setTimeout(() => flash.remove(), 400);
-  }, 1200);
+    const cloudWidth = activeImage ? activeImage.offsetWidth : 120;
+    const cloudLeft = window.innerWidth - 20 - cloudWidth;
+    const verticalOffset = 80;
 
+    Object.assign(div.style, {
+      top: verticalOffset + "px",
+      left: cloudLeft + "px",
+      width: cloudWidth + "px",
+      height: "100vh",
+      backgroundImage: `url(${chrome.runtime.getURL(getWeatherImage(currentImageIndex, "lightning"))})`,
+      backgroundRepeat: "repeat",
+      backgroundSize: cloudWidth + "px auto",
+      animation: "rainScroll 5s linear infinite"
+    });
+  }
 
-  /* 2) Vertical banner */
-  const cloudWidth = activeImage ? activeImage.offsetWidth : 120;
-  const cloudLeft = window.innerWidth - 20 - cloudWidth;
-  const verticalOffset = 80;
-
-  Object.assign(div.style, {
-    top: verticalOffset + "px",
-    left: cloudLeft + "px",
-    width: cloudWidth + "px",
-    height: "100vh",
-    backgroundImage: `url(${chrome.runtime.getURL("lightning_banner.png")})`,
-    backgroundRepeat: "repeat",
-    backgroundSize: cloudWidth + "px auto",
-    animation: "rainScroll 5s linear infinite"
-  });
-}
-
-  /* ----------------------------------------------
-    
-  ---------------------------------------------- */
   document.body.appendChild(div);
   requestAnimationFrame(() => div.style.opacity = "1");
 
@@ -294,22 +288,20 @@ function showWeather(mode, clickY = null, clickX = null) {
     div.style.opacity = "0";
     setTimeout(() => div.remove(), 400);
   }, 5000);
-  /* ---------------------------------------------- */
-
 }
+
 
 
 /* ---------------------------------------------------
-   Load starting cloud (always e0) ###changed here
+   Load starting cloud (always e0)
 --------------------------------------------------- */
 if (isShoppingSite()) {
   const saved = Number(localStorage.getItem("currentImageIndex"));
-
-  // if saved not valid, start at 0, else use saved ###changed here
   currentImageIndex = isNaN(saved) ? 0 : saved;
-
   showEMS(baseImages[currentImageIndex]);
 }
+
+
 
 /* ---------------------------------------------------
    Click listener
@@ -330,12 +322,10 @@ document.addEventListener("click", (e) => {
   const isAdd = addWords.some(w => text.includes(w) || aria.includes(w) || cls.includes(w));
   const isDel = delWords.some(w => text.includes(w) || aria.includes(w) || cls.includes(w));
 
-
-  /* ADD */
   if (isAdd) {
     currentImageIndex = Math.min(currentImageIndex + 1, baseImages.length - 1);
     showEMS(baseImages[currentImageIndex]);
-    showBubble(currentImageIndex);  /* ###changed here: bubble matches Option A */
+    showBubble(currentImageIndex);
 
     const mode = weatherMode[currentImageIndex];
 
@@ -348,12 +338,9 @@ document.addEventListener("click", (e) => {
     localStorage.setItem("currentImageIndex", currentImageIndex);
   }
 
-
-  /* REMOVE */
   if (isDel) {
     currentImageIndex = Math.max(currentImageIndex - 1, 0);
     showEMS(baseImages[currentImageIndex]);
-
     showWeather("blank");
     localStorage.setItem("currentImageIndex", currentImageIndex);
   }
