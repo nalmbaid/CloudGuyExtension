@@ -339,7 +339,7 @@ document.addEventListener("click", (e) => {
   const cls  = (button.className || "").toLowerCase();
 
   const addWords = ["add to cart", "add to bag", "buy now", "purchase", "shop now", "order now", "add", "+"];
-  const delWords = ["remove", "minus","decrease","less"];
+  const delWords = ["remove", "minus","decrease","less","delete"];
 
   const isAdd = addWords.some(w => text.includes(w) || aria.includes(w) || cls.includes(w));
   const isDel = delWords.some(w => text.includes(w) || aria.includes(w) || cls.includes(w));
