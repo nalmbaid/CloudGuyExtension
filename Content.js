@@ -94,8 +94,8 @@ const waterdropImages = [
 
 const lightningBannerImages = [
   { range: [10, 11], file: "lightning_banner.png" },
-  { range: [12, 15], file: "lightning_banner2.png" },
-  { range: [16, 20], file: "lightning_banner3.png" }
+  { range: [12, 15], file: "lightning_banner.png" },
+  { range: [16, 20], file: "lightning_banner_2.png" }
 ];
 
 function getWeatherImage(index, type) {
