@@ -1,5 +1,6 @@
 /* ---------------------------------------------------
-   Detect shopping sites
+      This function determines if the website you are on is a shopping website or has the potential to be.
+   It looks  for kep shopping terms on the website you are on and its aria labels.
 --------------------------------------------------- */
 function isShoppingSite() {
   const bodyText = document.body.innerText.toLowerCase();
@@ -15,6 +16,7 @@ function isShoppingSite() {
 
   const urlHit = /(product|item|cart|checkout|shop)/.test(location.pathname.toLowerCase());
 
+/*  This part of the function was obtained with help of AI, it detects if JSON-LD represents a Product, essentually checks if the page has a product to sell */
   const hasProductSchema = [...document.querySelectorAll('script[type="application/ld+json"]')]
     .some(tag => {
       try {
@@ -30,7 +32,7 @@ function isShoppingSite() {
 
 
 /* ---------------------------------------------------
-   Cloud images + speech bubbles
+    Load in the phases of Cloud Guy and the speech bubbles
 --------------------------------------------------- */
 const baseImages = [
   "e0.png",
@@ -84,7 +86,7 @@ const weatherMode = {
 
 
 /* ---------------------------------------------------
-   Weather image assignment by index (range-based)
+   Weather image assignment by index  >> so each set of clouds has its own banner
 --------------------------------------------------- */
 const waterdropImages = [
   { range: [1, 3], file: "waterdrops.png" },
@@ -293,13 +295,33 @@ function showWeather(mode, clickY = null, clickX = null) {
 
 
 /* ---------------------------------------------------
-   Load starting cloud (always e0)
+   Load starting cloud (always e0) -- this waits for the page to run fully or tries again
 --------------------------------------------------- */
-if (isShoppingSite()) {
+function initCloud() {
+  if (!isShoppingSite()) return;
+
   const saved = Number(localStorage.getItem("currentImageIndex"));
   currentImageIndex = isNaN(saved) ? 0 : saved;
-  showEMS(baseImages[currentImageIndex]);
+
+  // Retry insertion to handle SPAs / delayed DOM
+  const tryShow = () => {
+    if (!document.body) {
+      setTimeout(tryShow, 200); // try again shortly
+      return;
+    }
+    showEMS(baseImages[currentImageIndex]);
+  };
+
+  tryShow();
 }
+
+// Run once DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initCloud);
+} else {
+  initCloud();
+}
+
 
 
 
@@ -317,7 +339,7 @@ document.addEventListener("click", (e) => {
   const cls  = (button.className || "").toLowerCase();
 
   const addWords = ["add to cart", "add to bag", "buy now", "purchase", "shop now", "order now", "add", "+"];
-  const delWords = ["remove", "minus"];
+  const delWords = ["remove", "minus","decrease","less"];
 
   const isAdd = addWords.some(w => text.includes(w) || aria.includes(w) || cls.includes(w));
   const isDel = delWords.some(w => text.includes(w) || aria.includes(w) || cls.includes(w));
