@@ -281,7 +281,7 @@ if (mode === "lightning") {
     animation: "rainScroll 5s linear infinite"
   });
 }
-
+}
 
 
 
