@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "01 Cloud Guy  Dec 7 rain drops and lightning",
+  "version": "1.0",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["Content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["*.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
