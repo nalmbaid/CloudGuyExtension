@@ -232,55 +232,55 @@ function showWeather(mode, clickY = null, clickX = null) {
 ---------------------------------------------- */
   if (mode === "lightning") {
 
-    /* 1) Lightning FLASH — keep your existing behavior */
-    const flash = document.createElement("div");
+  /* 1) Lightning FLASH */
+  const flash = document.createElement("div");
 
-    flash.style.setProperty("--flash1", Math.random());
-    flash.style.setProperty("--flash2", Math.random());
-    flash.style.setProperty("--flash3", Math.random());
-    flash.style.setProperty("--flash4", Math.random());
+  flash.style.setProperty("--flash1", Math.random());
+  flash.style.setProperty("--flash2", Math.random());
+  flash.style.setProperty("--flash3", Math.random());
+  flash.style.setProperty("--flash4", Math.random());
 
-    Object.assign(flash.style, {
-      position: "fixed",
-      top: clickY + "px",
-      left: clickX + "px",
-      width: "80px",
-      height: "120px",
-      backgroundImage: `url(${chrome.runtime.getURL("lightning.png")})`,
-      backgroundRepeat: "no-repeat",
-      backgroundSize: "contain",
-      animation: "lightningFlash 1s ease-in-out infinite",
-      pointerEvents: "none",
-      opacity: "0",
-      zIndex: "10001",
-      transition: "opacity .2s"
-    });
+  Object.assign(flash.style, {
+    position: "fixed",
+    top: clickY + "px",
+    left: clickX + "px",
+    width: "80px",
+    height: "120px",
+    backgroundImage: `url(${chrome.runtime.getURL("lightning.png")})`,
+    backgroundRepeat: "no-repeat",
+    backgroundSize: "contain",
+    animation: "lightningFlash 1s ease-in-out infinite",
+    pointerEvents: "none",
+    opacity: "0",
+    zIndex: "10001",
+    transition: "opacity .2s"
+  });
 
-    document.body.appendChild(flash);
-    requestAnimationFrame(() => flash.style.opacity = "1");
+  document.body.appendChild(flash);
+  requestAnimationFrame(() => flash.style.opacity = "1");
 
-    /* Auto-remove flash */
-    setTimeout(() => {
-      flash.style.opacity = "0";
-      setTimeout(() => flash.remove(), 400);
-    }, 1200);
+  setTimeout(() => {
+    flash.style.opacity = "0";
+    setTimeout(() => flash.remove(), 400);
+  }, 1200);
 
-    /* 2) Vertical banner — EXACT SAME as waterdrops */
-    const cloudWidth = activeImage ? activeImage.offsetWidth : 120;
-    const cloudLeft = window.innerWidth - 20 - cloudWidth;
-    const verticalOffset = 40;
 
-    Object.assign(div.style, {
-      top: verticalOffset + "px",
-      left: cloudLeft + "px",
-      width: cloudWidth + "px",
-      height: "100vh",
-      backgroundImage: `url(${chrome.runtime.getURL("lightning_banner.png")})`,
-      backgroundRepeat: "repeat",
-      backgroundSize: cloudWidth + "px auto",
-      animation: "rainScroll 5s linear infinite"
-    });
-  }
+  /* 2) Vertical banner */
+  const cloudWidth = activeImage ? activeImage.offsetWidth : 120;
+  const cloudLeft = window.innerWidth - 20 - cloudWidth;
+  const verticalOffset = 40;
+
+  Object.assign(div.style, {
+    top: verticalOffset + "px",
+    left: cloudLeft + "px",
+    width: cloudWidth + "px",
+    height: "100vh",
+    backgroundImage: `url(${chrome.runtime.getURL("lightning_banner.png")})`,
+    backgroundRepeat: "repeat",
+    backgroundSize: cloudWidth + "px auto",
+    animation: "rainScroll 5s linear infinite"
+  });
+}
 
   /* ----------------------------------------------
     
