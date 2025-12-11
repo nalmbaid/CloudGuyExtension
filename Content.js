@@ -209,7 +209,7 @@ function showWeather(mode, clickY = null, clickX = null) {
     const cloudLeft = window.innerWidth - 20 - cloudWidth;
 
     // Offset downward from cloud top ###changed here
-    const verticalOffset = 40;  // adjust this value to change how low it starts
+    const verticalOffset = 80;  // adjust this value to change how low it starts
 
     Object.assign(div.style, {
       top: verticalOffset + "px",  /* starts slightly lower than cloud */
@@ -268,7 +268,7 @@ function showWeather(mode, clickY = null, clickX = null) {
   /* 2) Vertical banner */
   const cloudWidth = activeImage ? activeImage.offsetWidth : 120;
   const cloudLeft = window.innerWidth - 20 - cloudWidth;
-  const verticalOffset = 40;
+  const verticalOffset = 80;
 
   Object.assign(div.style, {
     top: verticalOffset + "px",
